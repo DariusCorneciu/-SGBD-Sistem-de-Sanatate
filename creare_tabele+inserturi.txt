@@ -1,0 +1,1379 @@
+/*CREATE TABLE Medici (
+    medic_id INT PRIMARY KEY,
+    nume VARCHAR(50),
+    specializare VARCHAR(50),
+    data_angajarii DATE
+);
+CREATE TABLE Pacienti (
+    pacient_id INT PRIMARY KEY,
+    nume VARCHAR(50),
+    data_nasterii DATE,
+    adresa VARCHAR(100)
+);*/
+
+--- pentru script deschid sql plus si bag comenzile astea, iar scriptul se genereaza automat
+/*SPOOL D:\script_sql\sterg_tabele.sql
+select 'DROP TABLE'||' '||TABLE_NAME ||';' as "---  " from user_tables;
+Spool off
+*/
+
+
+CREATE TABLE SPECIALIZARI(
+ID_SPECIALIZARE INT PRIMARY KEY,
+NUME_SPECIALIZARE VARCHAR2(50) NOT NULL unique
+);
+CREATE TABLE JUDET(
+ID_JUDET INT PRIMARY KEY,
+NUME_JUDET VARCHAR2(50) NOT NULL unique
+);
+CREATE TABLE ORAS(
+ID_ORAS INT PRIMARY KEY,
+ID_JUDET INT NOT NULL,
+NUME_ORAS VARCHAR2(50) NOT NULL,
+FOREIGN KEY (ID_JUDET) REFERENCES JUDET(ID_JUDET)
+);
+
+CREATE TABLE STRADA(
+ID_STRADA INT PRIMARY KEY,
+NUME_STRADA VARCHAR2(50) NOT NULL,
+ID_ORAS INT NOT NULL,
+FOREIGN KEY (ID_ORAS) REFERENCES ORAS(ID_ORAS)
+);
+CREATE TABLE SPITAL(
+ID_SPITAL INT PRIMARY KEY,
+ID_STRADA INT NOT NULL,
+NUME_SPITAL VARCHAR2(100) NOT NULL,
+NUMAR_PATURI INT DEFAULT 20,
+FOREIGN KEY (ID_STRADA) REFERENCES STRADA(ID_STRADA)
+);
+
+CREATE TABLE MEDICI(
+ID_MEDIC INT PRIMARY KEY,
+ID_SPECIALIZARE INT,
+ID_SPITAL INT,
+NUME VARCHAR2(50) NOT NULL,
+PRENUME VARCHAR2(50) NOT NULL,
+SALARIU INT DEFAULT 2500,
+DATA_ANGAJARI DATE DEFAULT  SYSDATE,
+FOREIGN KEY (ID_SPECIALIZARE) REFERENCES SPECIALIZARI(ID_SPECIALIZARE),
+FOREIGN KEY (ID_SPITAL) REFERENCES  SPITAL(ID_SPITAL)
+);
+
+CREATE TABLE DOMICILIU(
+ID_DOMICILIU INT PRIMARY KEY,
+ID_STRADA INT NOT NULL ,
+NUMAR INT not null,
+BLOC INT default NULL,
+APARTAMENT INT default NULL,
+SCARA VARCHAR(1) default NULL,
+FOREIGN KEY(ID_STRADA) REFERENCES STRADA(ID_STRADA)
+);
+
+
+CREATE TABLE JOB(
+    ID_JOB INT PRIMARY KEY,
+    NUME_DOMENIU VARCHAR2(100) NOT NULL
+);
+
+CREATE TABLE BOLI_SPECIFICE(
+    ID_BOALA INT PRIMARY KEY,
+    NUME_BOALA VARCHAR2(100) NOT NULL unique,
+    OBSERVATII VARCHAR2(100) DEFAULT NULL
+);
+CREATE TABLE JOB_PREDISPUSI_BOLI(
+    ID_BOALA INT,
+    ID_JOB INT,
+    FOREIGN KEY (ID_BOALA) REFERENCES BOLI_SPECIFICE(ID_BOALA),
+    FOREIGN KEY (ID_JOB) REFERENCES JOB(ID_JOB),
+    PRIMARY KEY (ID_JOB,ID_BOALA)
+);
+
+CREATE TABLE PACIENTI(
+    ID_PACIENT INT PRIMARY KEY,
+    ID_DOMICILIU INT NOT NULL,
+    ID_JOB INT DEFAULT NULL,
+    NUME VARCHAR2(50) NOT NULL ,
+    PRENUME VARCHAR2(50) NOT NULL,
+    FOREIGN KEY (ID_JOB) REFERENCES JOB(ID_JOB),
+    FOREIGN KEY (ID_DOMICILIU) REFERENCES DOMICILIU(ID_DOMICILIU)
+
+);
+
+CREATE TABLE TIP_RETETA(
+    ID_TIP INT PRIMARY KEY,
+    NUMELE_TIPULUI VARCHAR2(50) NOT NULL
+);
+CREATE TABLE RETETE(
+  ID_RETETA INT PRIMARY KEY,
+  TIP_RETETA INT,
+  DATA_ELIBERARII DATE DEFAULT SYSDATE,
+  FOREIGN KEY (TIP_RETETA) REFERENCES TIP_RETETA(ID_TIP)
+);
+CREATE TABLE MEDICAMENTE(
+    ID_MEDICAMENT INT PRIMARY KEY,
+    TIP_RETETA INT,
+    NUME_MEDICAMENT VARCHAR2(100) NOT NULL,
+    FOREIGN KEY (TIP_RETETA) REFERENCES TIP_RETETA(ID_TIP)
+);
+CREATE TABLE RETETA_CONTINE_MEDICAMENTE(
+    ID_MEDICAMENT INT,
+    ID_RETETA INT,
+    FOREIGN KEY (ID_MEDICAMENT) REFERENCES MEDICAMENTE(ID_MEDICAMENT),
+    FOREIGN KEY (ID_RETETA) REFERENCES RETETE(ID_RETETA),
+    PRIMARY KEY (ID_RETETA,ID_MEDICAMENT)
+);
+CREATE TABLE ISTORIC_PACIENTI(
+    ID_ISTORIC INT PRIMARY KEY,
+    ID_PACIENT INT NOT NULL ,
+    ID_MEDIC INT NOT NULL ,
+    ID_RETETA INT NOT NULL ,
+    FOREIGN KEY (ID_PACIENT) REFERENCES PACIENTI(ID_PACIENT),
+    FOREIGN KEY (ID_MEDIC) REFERENCES  MEDICI(ID_MEDIC),
+    FOREIGN KEY (ID_RETETA) REFERENCES RETETE(ID_RETETA)
+)
+
+--- drop all constraint form all tables
+SPOOL D:\script_sql\sterg_tabele.sql;
+SELECT 'ALTER TABLE ' || TABLE_NAME || ' DROP CONSTRAINT ' || CONSTRAINT_NAME || ';' FROM USER_CONSTRAINTS where TABLE_NAME not like 'BIN%' AND CONSTRAINT_TYPE != 'P';
+-- drop all tables
+select 'DROP TABLE ' || TABLE_NAME || ';' FROM user_tables;
+SPOOL OFF;
+-- select * from USER_CONSTRAINTS;
+-- select * from ALL_CONSTRAINTS where OWNER like 'UTILIZATOR';
+-- select 'CREATE TABLE ' || UTC.TABLE_NAME || '(' || UC.SEARCH_CONDITION_VC
+-- from USER_TAB_COLUMNS UTC
+-- left JOIN USER_CONSTRAINTS UC ON UTC.TABLE_NAME = UC.TABLE_NAME
+-- WHERE UPPER(UC.OWNER) LIKE UPPER('utilizator') and uc.SEARCH_CONDITION_VC is not null;
+
+
+select * from judet;
+create sequence  seq_istoric
+start with 1
+increment by 1;
+
+
+delete from JUDET;
+select * from JUDET;
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Alba');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Arad');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Arges');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Bacau');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Bihor');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Bistrita-Nasaud');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Botosani');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Brasov');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Braila');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Bucuresti');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Buzau');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Caras-Severin');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Calarasi');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Cluj');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Constanta');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Covasna');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Dambovita');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Dolj');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Galati');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Giurgiu');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Gorj');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Harghita');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Hunedoara');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Ialomita');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Iasi');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Ilfov');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Maramures');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Mehedinti');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Mures');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Neamt');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Olt');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Prahova');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Satu Mare');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Salaj');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Sibiu');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Suceava');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Teleorman');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Timis');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Tulcea');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Vaslui');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Valcea');
+insert into JUDET(id_judet, nume_judet) VALUES (seq_judet.nextval,'Vrancea');
+COMMIT ;
+SELECT 'INSERT INTO JUDET(id_judet, nume_judet) VALUES (' || ID_JUDET || ',''' || NUME_JUDET || ''');' FROM JUDET;
+select * from USER_TAB_COLUMNS;
+
+insert into ORAS(id_oras, ID_JUDET, nume_oras) values(seq_oras.nextval,1,'Alba Iulia');
+insert into ORAS(id_oras, ID_JUDET, nume_oras) values(seq_oras.nextval,2,'Arad'); --
+insert into ORAS(id_oras, ID_JUDET, nume_oras) values(seq_oras.nextval,3,'Pitesti'); --
+insert into ORAS(id_oras, ID_JUDET, nume_oras) values(seq_oras.nextval,4,'Bacau'); --
+insert into ORAS(id_oras, ID_JUDET, nume_oras) values(seq_oras.nextval,10,'Bucuresti'); --
+insert into ORAS(id_oras, ID_JUDET, nume_oras) values(seq_oras.nextval,19,'Braila'); --
+insert into ORAS(id_oras, ID_JUDET, nume_oras) values(seq_oras.nextval,26,'Voluntari');
+insert into ORAS(id_oras, ID_JUDET, nume_oras) values(seq_oras.nextval,40,'Vaslui'); --
+
+
+insert into STRADA(id_strada, nume_strada) values (seq_strada.nextval,'Strada Stefan cel Mare'); -- Bucuresti si Vaslui, Braila
+insert into STRADA(id_strada, nume_strada) values (seq_strada.nextval,'Soseaua Mihai Bravu'); -- Bucuresti
+insert into STRADA(id_strada, nume_strada) values (seq_strada.nextval,'Strada Hrisovului'); -- Bucuresti
+insert into STRADA(id_strada, nume_strada) values (seq_strada.nextval,'Strada Exercitiu'); -- Pitesti
+insert into STRADA(id_strada, nume_strada) values (seq_strada.nextval,'Strada Nicolae Iorga'); -- Pitesti, Bucuresti, Bacau
+insert into STRADA(id_strada, nume_strada) values (seq_strada.nextval,'Strada Mihail Kogalniceanu'); -- Vaslui,Arad
+insert into STRADA(id_strada, nume_strada) values (seq_strada.nextval,'Strada Grivitei'); -- Bucuresti, Braila
+insert into STRADA(id_strada, nume_strada) values (seq_strada.nextval,'Strada Titu Maiorescu'); -- Voluntari
+insert into STRADA(id_strada, nume_strada) values (seq_strada.nextval,'Bulevardul Incoronarii'); -- Alba Iulia
+
+insert into STRADA_IN_ORAS(id_oras, id_strada) values (5,1);
+insert into STRADA_IN_ORAS(id_oras, id_strada) values (5,2);
+insert into STRADA_IN_ORAS(id_oras, id_strada) values (5,3);
+insert into STRADA_IN_ORAS(id_oras, id_strada) values (5,5);
+insert into STRADA_IN_ORAS(id_oras, id_strada) values (5,7);
+insert into STRADA_IN_ORAS(id_oras, id_strada) values (1,9);
+insert into STRADA_IN_ORAS(id_oras, id_strada) values (2,6);
+insert into STRADA_IN_ORAS(id_oras, id_strada) values (3,4);
+insert into STRADA_IN_ORAS(id_oras, id_strada) values (4,5);
+insert into STRADA_IN_ORAS(id_oras, id_strada) values (6,7);
+insert into STRADA_IN_ORAS(id_oras, id_strada) values (7,8);
+insert into STRADA_IN_ORAS(id_oras, id_strada) values (8,1);
+insert into STRADA_IN_ORAS(id_oras, id_strada) values (8,6);
+
+commit;
+select * from STRADA_IN_ORAS;
+
+DROP TABLE JUDET  cascade constraints;
+DROP TABLE SPECIALIZARI cascade constraints;
+DROP TABLE ORAS  cascade constraints;
+DROP TABLE STRADA cascade constraints;
+DROP TABLE STRADA_IN_ORAS cascade constraints;
+DROP TABLE SPITAL cascade constraints;
+DROP TABLE MEDICI cascade constraints;
+DROP TABLE DOMICILIU cascade constraints;
+DROP TABLE JOB cascade constraints;
+DROP TABLE BOLI_SPECIFICE cascade constraints;
+DROP TABLE JOB_PREDISPUSI_BOLI cascade constraints;
+DROP TABLE PACIENTI cascade constraints;
+DROP TABLE TIP_RETETA cascade constraints;
+DROP TABLE RETETE cascade constraints;
+DROP TABLE MEDICAMENTE cascade constraints;
+DROP TABLE RETETA_CONTINE_MEDICAMENTE cascade constraints;
+DROP TABLE ISTORIC_PACIENTI cascade constraints;
+
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Arges'), 'Pitesti');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Alba'), 'Alba Iulia');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Bacau'), 'Bacau');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Arad'), 'Arad');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Bihor'), 'Oradea');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Botosani'), 'Botosani');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Bistrita-Nasaud'), 'Bistrita');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Braila'), 'Braila');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Brasov'), 'Brasov');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Satu Mare'), 'Satu Mare');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Caras-Severin'), 'Resita');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Calarasi'), 'Calarasi');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Prahova'), 'Ploiesti');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Cluj'), 'Cluj-Napoca');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Bucuresti'), 'Bucuresti');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Constanta'), 'Constanta');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Buzau'), 'Buzau');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Dambovita'), 'Targoviste');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Covasna'), 'Sfantu Gheorghe');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Dolj'), 'Craiova');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Gorj'), 'Targu Jiu');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Harghita'), 'Miercurea Ciuc');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Hunedoara'), 'Deva');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Ialomita'), 'Slobozia');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Iasi'), 'Iasi');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Ilfov'), 'Voluntari');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Maramures'), 'Baia Mare');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Mehedinti'), 'Drobeta-Turnu Severin');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Mures'), 'Targu Mures');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Neamt'), 'Piatra Neamt');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Olt'), 'Slatina');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Salaj'), 'Zalau');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Sibiu'), 'Sibiu');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Valcea'), 'Ramnicu Valcea');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Vrancea'), 'Focsani');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Suceava'), 'Suceava');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Teleorman'), 'Alexandria');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Timis'), 'Timisoara');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Tulcea'), 'Tulcea');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Vaslui'), 'Vaslui');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Galati'), 'Galati');
+INSERT INTO Oras (ID_ORAS,ID_JUDET, nume_oras) VALUES (seq_oras.nextval,(SELECT ID_JUDET FROM Judet WHERE nume_judet = 'Giurgiu'), 'Giurgiu');
+Commit;
+select * from ORAS;
+delete oras;
+
+
+
+-- Arad
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Arad'), 'Bulevardul Revoluției');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Arad'), 'Strada Vasile Goldis');
+
+-- Arges
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Pitesti'), 'Bulevardul Nicolae Balcescu');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Pitesti'), 'Strada Alexandru Odobescu');
+
+-- Alba Iulia
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Alba Iulia'), 'Bulevardul Regele Ferdinand');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Alba Iulia'), 'Strada Avram Iancu');
+
+-- Bacau
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Bacau'), 'Bulevardul Unirii');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Bacau'), 'Strada Mihai Eminescu');
+
+-- Bistrita-Nasaud
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Bistrita'), 'Bulevardul Decebal');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Bistrita'), 'Strada Liviu Rebreanu');
+
+-- Bihor
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Oradea'), 'Bulevardul Dacia');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Oradea'), 'Strada Republicii');
+
+-- Botosani
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Botosani'), 'Bulevardul Mihai Eminescu');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Botosani'), 'Strada Stefan cel Mare');
+
+-- Brasov
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Brasov'), 'Bulevardul Eroilor');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Brasov'), 'Strada Republicii');
+
+
+-- Buzau
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Buzau'), 'Bulevardul Independentei');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Buzau'), 'Strada Mihai Viteazu');
+-- Braila
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Braila'), 'Bulevardul Dorobantilor');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Braila'), 'Strada Mihail Kogalniceanu');
+
+-- Bucuresti
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Bucuresti'), 'Bulevardul Unirii');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Bucuresti'), 'Calea Victoriei');
+
+-- Caras-Severin
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Resita'), 'Bulevardul 1 Decembrie');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Resita'), 'Strada Avram Iancu');
+
+-- Calarasi
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Calarasi'), 'Bulevardul Dorobantilor');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Calarasi'), 'Strada 1 Mai');
+
+-- Cluj
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Cluj-Napoca'), 'Bulevardul Eroilor');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Cluj-Napoca'), 'Strada Horea');
+
+-- Constanta
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Constanta'), 'Bulevardul Mamaia');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Constanta'), 'Strada Tomis');
+
+
+-- Dolj
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Craiova'), 'Bulevardul Carol I');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Craiova'), 'Strada Madona Dudu');
+
+-- Galati
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Galati'), 'Bulevardul Dorobantilor');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Galati'), 'Strada Eroilor');
+-- Covasna
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Sfantu Gheorghe'), 'Bulevardul Mihai Viteazu');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Sfantu Gheorghe'), 'Strada Nicolae Balcescu');
+
+-- Dambovita
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Targoviste'), 'Bulevardul Carol I');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Targoviste'), 'Strada Matei Basarab');
+
+
+-- Giurgiu
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Giurgiu'), 'Bulevardul Unirii');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Giurgiu'), 'Strada Eroilor');
+
+
+-- Harghita
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Miercurea Ciuc'), 'Bulevardul Harghita');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Miercurea Ciuc'), 'Strada Unirii');
+-- Gorj
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Targu Jiu'), 'Bulevardul Ecaterina Teodoroiu');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Targu Jiu'), 'Strada General Magheru');
+
+-- Hunedoara
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Deva'), 'Bulevardul 1 Decembrie');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Deva'), 'Strada Mihai Eminescu');
+
+-- Ialomita
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Slobozia'), 'Bulevardul Independentei');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Slobozia'), 'Strada Mihail Kogalniceanu');
+
+-- Maramures
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Baia Mare'), 'Bulevardul Republicii');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Baia Mare'), 'Strada Mihai Viteazu');
+
+-- Iasi
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Iasi'), 'Bulevardul Stefan cel Mare');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Iasi'), 'Strada Palat');
+
+-- Ilfov
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Bucuresti'), 'Bulevardul Pipera');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Bucuresti'), 'Strada Bucuresti');
+
+-- Targu Mures
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Targu Mures'), 'Strada Avram Iancu');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Targu Mures'), 'Strada Unirii');
+
+-- Piatra Neamt
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Piatra Neamt'), 'Bulevardul Decebal');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Piatra Neamt'), 'Strada Stefan cel Mare');
+
+-- Slatina
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Slatina'), 'Bulevardul Republicii');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Slatina'), 'Strada Mihai Viteazu');
+
+-- Ploiesti
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Ploiesti'), 'Bulevardul Independentei');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Ploiesti'), 'Strada Gheorghe Doja');
+
+-- Satu Mare
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Satu Mare'), 'Strada Horea');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Satu Mare'), 'Bulevardul Vasile Lucaciu');
+-- Zalau
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Zalau'), 'Bulevardul Mihai Viteazul');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Zalau'), 'Strada Avram Iancu');
+
+-- Sibiu
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Sibiu'), 'Bulevardul Victoriei');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Sibiu'), 'Strada Nicolae Balcescu');
+
+-- Suceava
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Suceava'), 'Bulevardul George Enescu');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Suceava'), 'Strada Stefan cel Mare');
+
+-- Alexandria
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Alexandria'), 'Bulevardul 1 Decembrie');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Alexandria'), 'Strada Alexandru Ioan Cuza');
+
+-- Timisoara
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Timisoara'), 'Bulevardul Revolutiei');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Timisoara'), 'Strada Marasesti');
+
+-- Tulcea
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Tulcea'), 'Bulevardul Republicii');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Tulcea'), 'Strada Isaccei');
+
+-- Vaslui
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Vaslui'), 'Bulevardul Stefan cel Mare');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Vaslui'), 'Strada Cuza Voda');
+
+-- Ramnicu Valcea
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Ramnicu Valcea'), 'Bulevardul General Praporgescu');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Ramnicu Valcea'), 'Strada Calea lui Traian');
+
+-- Focsani
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Focsani'), 'Bulevardul Unirii');
+INSERT INTO Strada (id_strada,id_oras, nume_strada) VALUES (seq_strada.nextval,(SELECT id_oras FROM Oras WHERE nume_oras = 'Focsani'), 'Strada Cuza Voda');
+
+Commit;
+select * from STRADA;
+-- Primele 20 de inserturi
+select * from Domiciliu;
+
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (1, 1, 12, 6, 3, 'B');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (2, 2, 45, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (3, 3, 78, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (4, 4, 9, 11, 15, 'G');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (5, 5, 23, 8, 7, 'I');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (6, 6, 56, NULL, NULL, NULL);
+
+-- Următoarele 20 de inserturi
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (7, 7, 34, 10, 8, 'E');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (8, 8, 67, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (9, 9, 41, 7, 5, 'C');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (10, 10, 14, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (11, 11, 88, 4, 12, 'G');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (12, 12, 27, NULL, NULL, NULL);
+
+-- Alte 20 de inserturi
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (13, 13, 19, 5, 6, 'D');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (14, 14, 52, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (15, 15, 63, 3, 9, 'B');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (16, 16, 72, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (17, 17, 31, 1, 4, 'F');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (18, 18, 49, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (19, 19, 77, 0, 11, 'E');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (20, 20, 22, NULL, NULL, NULL);
+-- Primele 20 de inserturi
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (21, 1, 56, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (22, 2, 14, 1, 2, 'B');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (23, 3, 29, 4, 7, 'E');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (24, 4, 8, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (25, 5, 41, 2, 5, 'C');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (26, 6, 63, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (27, 7, 22, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (28, 8, 48, 3, 9, 'D');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (29, 9, 77, 1, 12, 'B');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (30, 10, 33, 5, 4, 'F');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (31, 11, 19, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (32, 12, 58, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (33, 13, 12, 4, 3, 'E');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (34, 14, 27, NULL, NULL, NULL);
+
+-- Ultimele 10 inserturi
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (35, 15, 39, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (36, 16, 18, 2, 7, 'G');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (37, 17, 51, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (38, 18, 32, 1, 4, 'A');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (39, 19, 67, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (40, 20, 44, 3, 8, 'B');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (41, 21, 23, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (42, 22, 56, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (43, 23, 11, 4, 6, 'C');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (44, 24, 28, 1, 2, 'D');
+-- Încă 6 inserturi
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (45, 25, 49, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (46, 26, 17, 3, 5, 'E');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (47, 27, 32, 2, 8, 'F');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (48, 28, 22, 4, 6, 'G');
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (49, 29, 14, NULL, NULL, NULL);
+INSERT INTO DOMICILIU (ID_DOMICILIU, ID_STRADA, NUMAR, BLOC, APARTAMENT, SCARA) VALUES (50, 30, 37, 1, 3, 'A');
+
+Commit;
+select * from DOMICILIU;
+
+select STRADA.ID_STRADA,STRADA.NUME_STRADA,o.NUME_ORAS from STRADA
+left join ORAS O on STRADA.ID_ORAS = O.ID_ORAS
+where o.NUME_ORAS = 'Bucuresti';
+
+INSERT INTO SPITAL (ID_SPITAL, ID_STRADA, NUME_SPITAL, NUMAR_PATURI) VALUES (1, 55, 'Spitalul Municipal Targu Mures', 150);
+INSERT INTO SPITAL (ID_SPITAL, ID_STRADA, NUME_SPITAL, NUMAR_PATURI) VALUES (2, 58, 'Spitalul Judetean Piatra Neamt', 200);
+INSERT INTO SPITAL (ID_SPITAL, ID_STRADA, NUME_SPITAL, NUMAR_PATURI) VALUES (3, 60, 'Spitalul Municipal Slatina', 180);
+INSERT INTO SPITAL (ID_SPITAL, ID_STRADA, NUME_SPITAL, NUMAR_PATURI) VALUES (4, 62, 'Spitalul de Urgenta Ploiesti', 250);
+INSERT INTO SPITAL (ID_SPITAL, ID_STRADA, NUME_SPITAL, NUMAR_PATURI) VALUES (5, 64, 'Spitalul Judetean Satu Mare', 120);
+INSERT INTO SPITAL (ID_SPITAL, ID_STRADA, NUME_SPITAL, NUMAR_PATURI) VALUES (6, 66, 'Spitalul Municipal Zalau', 100);
+INSERT INTO SPITAL (ID_SPITAL, ID_STRADA, NUME_SPITAL, NUMAR_PATURI) VALUES (7, 68, 'Spitalul Clinic Judetean de Urgenta Sibiu', 300);
+INSERT INTO SPITAL (ID_SPITAL, ID_STRADA, NUME_SPITAL, NUMAR_PATURI) VALUES (8, 70, 'Spitalul Judetean Suceava', 180);
+INSERT INTO SPITAL (ID_SPITAL, ID_STRADA, NUME_SPITAL, NUMAR_PATURI) VALUES (9, 72, 'Spitalul Judetean Alexandria', 150);
+INSERT INTO SPITAL (ID_SPITAL, ID_STRADA, NUME_SPITAL, NUMAR_PATURI) VALUES (10, 74, 'Spitalul Clinic Judetean de Urgenta Timisoara', 350);
+INSERT INTO SPITAL (ID_SPITAL, ID_STRADA, NUME_SPITAL, NUMAR_PATURI) VALUES (11, 53, 'Spitalul Regina Maria', 550);
+COMMIT;
+select * from SPITAL
+
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (1, 'Cardiologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (2, 'Neurologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (3, 'Chirurgie Generală');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (4, 'Dermatologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (5, 'Gastroenterologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (6, 'Endocrinologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (7, 'Hematologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (8, 'Imunologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (9, 'Nefrologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (10, 'Oftalmologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (11, 'Ortopedie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (12, 'Oncologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (13, 'Pediatrie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (14, 'Psihiatrie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (15, 'Radiologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (16, 'Reumatologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (17, 'Urologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (18, 'Pneumologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (19, 'Genetica Medicala');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (20, 'Medicina Interna');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (21, 'Medicina de Familie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (22, 'Chirurgie Cardiovasculara');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (23, 'Chirurgie Plastica');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (24, 'Neonatologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (25, 'Geriatrie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (26, 'Otorinolaringologie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (27, 'Medicina de Urgenta');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (28, 'Fiziatrie');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (29, 'Chirurgie Vasculara');
+INSERT INTO SPECIALIZARI (ID_SPECIALIZARE, NUME_SPECIALIZARE) VALUES (30, 'Medicina Sportiva');
+Commit;
+
+select * from SPITAL;
+select * from DOMICILIU;
+select * from MEDICI;
+select * from SP    ITAL;
+select * from SPECIALIZARI;
+
+
+-- Inserarea datelor pentru tabela MEDICI cu date fictive
+-- ID_SPECIALIZARE și ID_SPITAL sunt alese aleatoriu din intervalele specificate
+
+-- Medic 1
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI)
+VALUES (1, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)), 'Popescu', 'Ion', 3000, TO_DATE('2022-01-15', 'YYYY-MM-DD'));
+
+-- Medic 2
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI)
+VALUES (2, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)), 'Ionescu', 'Ana', 2800, TO_DATE('2022-02-20', 'YYYY-MM-DD'));
+
+-- Medic 3
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI)
+VALUES (3, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)), 'Dumitru', 'Maria', 2600, TO_DATE('2022-03-25', 'YYYY-MM-DD'));
+
+-- Medic 4
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI)
+VALUES (4, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)), 'Georgescu', 'Mihai', 3200, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))));
+
+-- Medic 5
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI)
+VALUES (5, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)), 'Mihai', 'Diana', 3000, TO_DATE('2022-05-15', 'YYYY-MM-DD'));
+
+-- Medic 6
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI)
+VALUES (6, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)), 'Stanescu', 'Gabriel', 2800, TO_DATE('2022-06-20', 'YYYY-MM-DD'));
+
+-- Medic 7
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI)
+VALUES (7, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)), 'Cristea', 'Ana-Maria', 2600, TO_DATE('2022-07-25', 'YYYY-MM-DD'));
+
+-- Medic 8
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI)
+VALUES (8, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)), 'Gheorghe', 'Ioan', 3200, TO_DATE('2022-08-10', 'YYYY-MM-DD'));
+
+-- Medic 9
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI)
+VALUES (9, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)), 'Iancu', 'Elena', 3000, TO_DATE('2022-09-15', 'YYYY-MM-DD'));
+
+-- Medic 10
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI)
+VALUES (10, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)), 'Vasilescu', 'Andrei', 2800, TO_DATE('2022-10-20', 'YYYY-MM-DD'));
+
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(11, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Voicu', 'Roxana', 2905,TO_DATE('2023-03-9', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(12, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Coman', 'Alexandrina', 3652,TO_DATE('2011-06-2', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(13, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Dragomir', 'Sorin', 3322,TO_DATE('2015-08-25', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(14, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Florea', 'Robert', 3282,TO_DATE('2004-09-18', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(15, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Bogdan', 'Sorin', 4424,TO_DATE('2005-04-13', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(16, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Frumosu', 'Lavinia', 4094,TO_DATE('2016-06-4', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(17, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Bogdan', 'Silvian', 3333,TO_DATE('2012-09-12', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(18, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Sorin', 'Alexandru', 4529,TO_DATE('2003-07-27', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(19, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Serban', 'George', 3974,TO_DATE('2021-06-17', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(20, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Stefanescu', 'Elena', 4854,TO_DATE('2008-09-7', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(21, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Ardelean', 'Ion', 3445,TO_DATE('2015-06-11', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(22, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Tomescu', 'Adela', 3411,TO_DATE('2010-05-26', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(23, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Stanciu', 'Dana', 3843,TO_DATE('2014-07-17', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(24, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Ardelean', 'Valentin', 3158,TO_DATE('2022-02-14', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(25, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Radulescu', 'Luminița', 4659,TO_DATE('2005-02-17', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(26, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Sorin', 'Marian', 4817,TO_DATE('2016-01-28', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(27, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Octavian', 'Vasile', 4488,TO_DATE('2006-05-10', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(28, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Badea', 'Loredana', 3054,TO_DATE('2004-08-18', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(29, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Oprea', 'Valeriu', 4585,TO_DATE('2012-01-7', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(30, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Cretu', 'Elena', 3790,TO_DATE('2001-09-5', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(31, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Gheorghita', 'Alina', 3407,TO_DATE('2015-04-22', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(32, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Grosu', 'Teodora', 3449,TO_DATE('2017-01-23', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(33, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Oprea', 'Andrei', 4755,TO_DATE('2002-08-26', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(34, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Dobre', 'Alexandrina', 3712,TO_DATE('2012-04-18', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(35, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Sava', 'Răzvan', 3034,TO_DATE('2020-09-24', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(36, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Cretu', 'Sorin', 4438,TO_DATE('2004-09-20', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(37, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Tomescu', 'Radu', 3945,TO_DATE('2016-06-15', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(38, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Nistor', 'Anca', 3981,TO_DATE('2018-02-21', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(39, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Ghitescu', 'Marius', 3703,TO_DATE('2012-08-19', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(40, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Ardelean', 'Eduard', 4983,TO_DATE('2021-07-19', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(41, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Lucian', 'Octavian', 4889,TO_DATE('2015-05-8', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(42, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Valentin', 'Elena', 3779,TO_DATE('2021-04-1', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(43, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Aurelian', 'Elena', 3454,TO_DATE('2018-07-27', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(44, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Ghitescu', 'Alexandra', 3975,TO_DATE('2006-07-1', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(45, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Ghitescu', 'Radu', 4478,TO_DATE('2014-03-4', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(46, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Burlacu', 'Marian', 4078,TO_DATE('2005-05-22', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(47, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Victor', 'Tudor', 2806,TO_DATE('2018-02-17', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(48, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Dima', 'Monica', 4888,TO_DATE('2011-02-19', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(49, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Cretu', 'Alex', 4331,TO_DATE('2021-01-27', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(50, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Popescu', 'Daniela', 3376,TO_DATE('2016-03-23', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(51, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Stanciu', 'Paul', 3838,TO_DATE('2023-06-22', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(52, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Ionita', 'Claudiu', 3207,TO_DATE('2010-07-19', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(53, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Sorin', 'Daniela', 3603,TO_DATE('2023-07-26', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(54, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Tanase', 'Bianca', 2830,TO_DATE('2013-02-20', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(55, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Florin', 'Lavinia', 3106,TO_DATE('2023-02-3', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(56, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Gheorghita', 'Emilian', 3424,TO_DATE('2017-03-5', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(57, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Oprea', 'Elena', 3302,TO_DATE('2021-02-14', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(58, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Negreanu', 'Elena', 4028,TO_DATE('2003-09-10', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(59, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Bogdan', 'Bogdan', 4342,TO_DATE('2015-02-17', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(60, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Iliescu', 'Nicolae', 3868,TO_DATE('2006-06-19', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(61, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Florea', 'Daniela', 4229,TO_DATE('2012-01-19', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(62, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Tomescu', 'Ema', 4473,TO_DATE('2014-01-23', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(63, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Eugen', 'Luminița', 3647,TO_DATE('2019-09-20', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(64, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Grosu', 'Alina', 4422,TO_DATE('2009-04-28', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(65, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Balanescu', 'Monica', 4190,TO_DATE('2023-02-16', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(66, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Octavian', 'Florin', 3999,TO_DATE('2021-03-9', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(67, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Ghitescu', 'Răzvan', 3359,TO_DATE('2005-01-9', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(68, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Nistor', 'Simona', 3864,TO_DATE('2021-05-14', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(69, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Serban', 'Elena', 3378,TO_DATE('2010-03-20', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(70, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Dima', 'Ionel', 2840,TO_DATE('2015-06-14', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(71, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Ionita', 'Loredana', 4796,TO_DATE('2011-04-25', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(72, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Dumitrache', 'Diana', 3401,TO_DATE('2023-08-2', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(73, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Chiriac', 'Bogdan', 2937,TO_DATE('2000-09-28', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(74, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Florin', 'Andrei', 3731,TO_DATE('2019-09-11', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(75, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Dobre', 'Sorin', 4749,TO_DATE('2006-01-12', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(76, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Oprea', 'Teodora', 4581,TO_DATE('2010-07-28', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(77, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Radu', 'Elena', 3035,TO_DATE('2011-05-25', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(78, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Horia', 'Dumitru', 3801,TO_DATE('2022-06-18', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(79, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Rosu', 'Victor', 4837,TO_DATE('2009-02-25', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(80, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Diaconu', 'Ștefan', 2991,TO_DATE('2001-01-6', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(81, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Hagi', 'Elena', 4061,TO_DATE('2001-08-4', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(82, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Vasiliu', 'Luminița', 3784,TO_DATE('2014-05-16', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(83, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Lucian', 'Silvian', 3120,TO_DATE('2014-08-8', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(84, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Frumosu', 'Octavia', 4328,TO_DATE('2003-09-26', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(85, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Lupu', 'Monica', 3541,TO_DATE('2009-08-20', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(86, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Marian', 'Georgiana', 3089,TO_DATE('2016-01-1', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(87, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Zoltan', 'Dorina', 4002,TO_DATE('2020-08-26', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(88, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Vasiliu', 'Anca', 4889,TO_DATE('2001-07-16', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(89, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Ciprian', 'Bogdan', 4682,TO_DATE('2007-02-24', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(90, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Vasilescu', 'Alexandru', 4942,TO_DATE('2007-01-12', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(91, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Ionita', 'Alexandru', 3630,TO_DATE('2003-04-27', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(92, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Dumitru', 'Ionel', 2865,TO_DATE('2011-04-26', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(93, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Badea', 'Florin', 4998,TO_DATE('2007-09-24', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(94, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Dragos', 'Șerban', 4476,TO_DATE('2004-02-3', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(95, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Aurelian', 'Irina', 4128,TO_DATE('2020-03-17', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(96, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Popescu', 'Octavian', 4590,TO_DATE('2006-05-9', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(97, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Dragomir', 'Sebastian', 3776,TO_DATE('2008-02-20', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(98, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Radu', 'Larisa', 3162,TO_DATE('2020-06-10', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(99, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Badea', 'Anca', 3381,TO_DATE('2004-07-15', 'YYYY-MM-DD'));
+INSERT INTO MEDICI (ID_MEDIC, ID_SPECIALIZARE, ID_SPITAL, NUME, PRENUME, SALARIU, DATA_ANGAJARI) VALUES
+(100, ROUND(DBMS_RANDOM.VALUE(1, 30)), ROUND(DBMS_RANDOM.VALUE(1, 11)),'Voicu', 'Andrei', 4252,TO_DATE('2015-09-20', 'YYYY-MM-DD'));
+COMMIT;
+
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (1, 'Programare');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (2, 'Design Grafic');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (3, 'Marketing Digital');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (4, 'Management');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (5, 'Finante');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (6, 'Inginerie Electrica');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (7, 'Resurse Umane');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (8, 'Vanzari');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (9, 'Logistica');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (10, 'Asistenta Medicala');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (11, 'Educatie');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (12, 'Jurnalism');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (13, 'Consultanta IT');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (14, 'Arhitectura');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (15, 'Servicii Clienti');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (16, 'Turism');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (17, 'Proiectare Mecanica');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (18, 'Arte Plastice');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (19, 'Biotecnologie');
+INSERT INTO JOB (ID_JOB, NUME_DOMENIU) VALUES (20, 'Telecomunicatii');
+COmmit;
+SELECT * FROM jOB;
+
+-- Inserarea datelor pentru tabela boli_specifice cu date fictive
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (1, 'Gripa', 'Simptome: febra, tuse, oboseala');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (2, 'Raceala', 'Simptome: nas infundat, stranut, dureri de gat');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (3, 'Diabet', 'Necesita gestionarea nivelului de zahar din sange');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (4, 'Hipertensiune', 'Cresterea presiunii arteriale');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (5, 'Osteoporoza', 'Scaderea densitatii osoase');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (6, 'Alergii', 'Reactii exagerate la alergeni specifici');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (7, 'Astm', 'Dificultati in respiratie');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (8, 'Depresie', 'Stare persistenta de tristete');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (9, 'Anxietate', 'Sentimente exagerate de neliniste');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (10, 'Artrita', 'Inflamarea articulatiilor');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (11, 'Parkinson', 'Tulburari motorii si tremuraturi');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (12, 'Cataracta', 'Opacifierea cristalinului ochiului');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (13, 'Diaree', 'Tranzit intestinal rapid');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (14, 'Anemia', 'Scaderea numarului de globule rosii');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (15, 'Epilepsie', 'Tulburari ale activitatii electrice cerebrale');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (16, 'Obstructie Pulmonara', 'Blocarea fluxului de aer in plamani');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (17, 'Leucemie', 'Proliferare anormala a celulelor albe din sange');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (18, 'Insuficienta Renala', 'Scaderea functiei renale');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (19, 'Migrena', 'Dureri de cap severe');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (20, 'Gastrita', 'Inflamarea mucoasei stomacului');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (21, 'Fibromialgie', 'Dureri musculare si oboseala cronica');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (22, 'Hepatita', 'Inflamarea ficatului');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (23, 'Psoriazis', 'Afecțiune a pielii caracterizată prin descuamare');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (24, 'Tiroidita', 'Inflamarea glandei tiroide');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (25, 'Ulcer', 'Leseuni ale mucoasei digestive');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (26, 'Scleroza Multipla', 'Leziuni ale sistemului nervos central');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (27, 'Pancreatita', 'Inflamarea pancreasului');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (28, 'Sindromul Ovarului Policistic', 'Dezechilibru hormonal la femei');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (29, 'Tromboza Venoasa', 'Formarea cheagurilor de sange in vene');
+INSERT INTO boli_specifice (ID_BOALA, NUME_BOALA, OBSERVATII) VALUES (30, 'Tuberculoza', 'Bacterie care afectează plămânii');
+
+Commit;
+
+-- Inserarea datelor pentru tabela job_predispusi_boli
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (1, 1);  -- Gripa poate fi asociata cu Jobul de Programator
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (1, 8);  -- Gripa poate fi asociata cu Jobul de Vanzari
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (2, 2);  -- Raceala poate fi asociata cu Jobul de Design Grafic
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (2, 5);  -- Raceala poate fi asociata cu Jobul de Finante
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (3, 6);  -- Diabet poate fi asociat cu Jobul de Inginerie Electrica
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (4, 4);  -- Hipertensiune poate fi asociata cu Jobul de Management
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (5, 10); -- Osteoporoza poate fi asociata cu Jobul de Asistenta Medicala
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (5, 11); -- Osteoporoza poate fi asociata cu Jobul de Educatie
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (6, 2);  -- Alergii pot fi asociate cu Jobul de Design Grafic
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (6, 8);  -- Alergii pot fi asociate cu Jobul de Vanzari
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (7, 5);  -- Astm poate fi asociat cu Jobul de Finante
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (7, 6);  -- Astm poate fi asociat cu Jobul de Inginerie Electrica
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (8, 7);  -- Depresie poate fi asociata cu Jobul de Resurse Umane
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (8, 11); -- Depresie poate fi asociata cu Jobul de Educatie
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (9, 1);  -- Anxietate poate fi asociata cu Jobul de Programator
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (9, 8);  -- Anxietate poate fi asociata cu Jobul de Vanzari
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (10, 10);-- Artrita poate fi asociata cu Jobul de Asistenta Medicala
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (10, 13);-- Artrita poate fi asociata cu Jobul de Consultanta IT
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (11, 2);  -- Parkinson poate fi asociat cu Jobul de Design Grafic
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (11, 5);  -- Parkinson poate fi asociat cu Jobul de Finante
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (12, 12); -- Cataracta poate fi asociata cu Jobul de Jurnalism
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (13, 3);  -- Diaree poate fi asociata cu Jobul de Marketing Digital
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (13, 9);  -- Diaree poate fi asociata cu Jobul de Logistica
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (14, 8);  -- Anemia poate fi asociata cu Jobul de Vanzari
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (14, 15); -- Anemia poate fi asociata cu Jobul de Servicii Clienti
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (15, 13); -- Epilepsie poate fi asociata cu Jobul de Consultanta IT
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (15, 16); -- Epilepsie poate fi asociata cu Jobul de Turism
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (16, 4);  -- Obstructie Pulmonara poate fi asociata cu Jobul de Management
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (16, 7);  -- Obstructie Pulmonara poate fi asociata cu Jobul de Resurse Umane
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (17, 10); -- Leucemie poate fi asociata cu Jobul de Asistenta Medicala
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (17, 13); -- Leucemie poate fi asociata cu Jobul de Consultanta IT
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (18, 14); -- Insuficienta Renala poate fi asociata cu Jobul de Arhitectura
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (18, 19); -- Insuficienta Renala poate fi asociata cu Jobul de Biotecnologie
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (19, 15); -- Migrena poate fi asociata cu Jobul de Servicii Clienti
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (19, 16); -- Migrena poate fi asociata cu Jobul de Turism
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (20, 11); -- Gastrita poate fi asociata cu Jobul de Educatie
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (20, 14); -- Gastrita poate fi asociata cu Jobul de Arhitectura
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (21, 19); -- Fibromialgie poate fi asociata cu Jobul de Biotecnologie
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (21, 20); -- Fibromialgie poate fi asociata cu Jobul de Telecomunicatii
+
+-- Continuarea inserărilor pentru tabela job_predispusi_boli
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (22, 18); -- Hepatita poate fi asociata cu Jobul de Arte Plastice
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (22, 20); -- Hepatita poate fi asociata cu Jobul de Telecomunicatii
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (23, 14); -- Psoriazis poate fi asociat cu Jobul de Arhitectura
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (23, 19); -- Psoriazis poate fi asociat cu Jobul de Biotecnologie
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (24, 12); -- Tiroidita poate fi asociata cu Jobul de Jurnalism
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (24, 17); -- Tiroidita poate fi asociata cu Jobul de Proiectare Mecanica
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (25, 5);  -- Ulcer poate fi asociat cu Jobul de Finante
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (25, 9);  -- Ulcer poate fi asociat cu Jobul de Logistica
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (26, 1);  -- Scleroza Multipla poate fi asociata cu Jobul de Programator
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (26, 13); -- Scleroza Multipla poate fi asociata cu Jobul de Consultanta IT
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (27, 17); -- Pancreatita poate fi asociata cu Jobul de Proiectare Mecanica
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (27, 18); -- Pancreatita poate fi asociata cu Jobul de Arte Plastice
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (28, 9);  -- Sindromul Ovarului Policistic poate fi asociat cu Jobul de Logistica
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (28, 15); -- Sindromul Ovarului Policistic poate fi asociat cu Jobul de Servicii Clienti
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (29, 14); -- Tromboza Venoasa poate fi asociata cu Jobul de Arhitectura
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (29, 20); -- Tromboza Venoasa poate fi asociata cu Jobul de Telecomunicatii
+
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (30, 3);  -- Tuberculoza poate fi asociata cu Jobul de Marketing Digital
+INSERT INTO job_predispusi_boli (ID_BOALA, ID_JOB) VALUES (30, 16); -- Tuberculoza poate fi asociata cu Jobul de Turism
+
+Commit;
+-- Inserarea datelor pentru tabela Tip_Reteta cu date fictive
+INSERT INTO Tip_Reteta (ID_TIP, NUMELE_TIPULUI) VALUES (1, 'Reteta simpla');
+INSERT INTO Tip_Reteta (ID_TIP, NUMELE_TIPULUI) VALUES (2, 'Reteta compusa');
+INSERT INTO Tip_Reteta (ID_TIP, NUMELE_TIPULUI) VALUES (3, 'Reteta electronica');
+INSERT INTO Tip_Reteta (ID_TIP, NUMELE_TIPULUI) VALUES (4, 'Reteta urgenta');
+INSERT INTO Tip_Reteta (ID_TIP, NUMELE_TIPULUI) VALUES (5, 'Reteta copii');
+INSERT INTO Tip_Reteta (ID_TIP, NUMELE_TIPULUI) VALUES (6, 'Reteta cronica');
+INSERT INTO Tip_Reteta (ID_TIP, NUMELE_TIPULUI) VALUES (7, 'Reteta pentru afectiuni dermatologice');
+INSERT INTO Tip_Reteta (ID_TIP, NUMELE_TIPULUI) VALUES (8, 'Reteta pentru afectiuni respiratorii');
+INSERT INTO Tip_Reteta (ID_TIP, NUMELE_TIPULUI) VALUES (9, 'Reteta pentru afectiuni cardiace');
+INSERT INTO Tip_Reteta (ID_TIP, NUMELE_TIPULUI) VALUES (10, 'Reteta pentru afectiuni digestive');
+Commit;
+select * from TIP_RETETA;
+select * from MEDICAMENTE;
+select * from Retete;
+
+create or replace type Lista as varray(20) of number(2);
+alter table RETETE
+add Lista_Medicamente Lista;
+
+select * from Pacienti;
+select * from ISTORIC_PACIENTI;
+SELECT table_name
+FROM user_tables
+WHERE num_rows = 0;
+
+
+select * from MEDICAMENTE;
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (1, 3, 'Paracetamol');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (2, 5, 'Ibuprofen');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (3, 2, 'Amoxicilin');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (4, 8, 'Omeprazol');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (5, 1, 'Aspirină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (6, 4, 'Loratadină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (7, 9, 'Captopril');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (8, 6, 'Metformin');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (9, 7, 'Atorvastatină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (10, 10, 'Escitalopram');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (11, 3, 'Diazepam');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (12, 5, 'Ranitidină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (13, 2, 'Ceftriaxonă');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (14, 8, 'Lansoprazol');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (15, 1, 'Naproxen');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (16, 4, 'Desloratadină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (17, 9, 'Enalapril');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (18, 6, 'Gliclazidă');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (19, 7, 'Simvastatină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (20, 10, 'Fluoxetină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (21, 3, 'Clonazepam');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (22, 5, 'Dexametazonă');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (23, 2, 'Azitromicină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (24, 8, 'Pantoprazol');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (25, 1, 'Ibuprofen');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (26, 4, 'Fexofenadină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (27, 9, 'Ramipril');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (28, 6, 'Glibenclamidă');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (29, 7, 'Rosuvastatină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (30, 10, 'Sertralin');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (31, 3, 'Alprazolam');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (32, 5, 'Diclofenac');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (33, 2, 'Ciprofloxacină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (34, 8, 'Esomeprazol');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (35, 1, 'Acetaminofen');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (36, 4, 'Levocetirizină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (37, 9, 'Losartan');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (38, 6, 'Pioglitazonă');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (39, 7, 'Pravastatină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (40, 10, 'Venlafaxină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (41, 3, 'Zolpidem');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (42, 5, 'Meloxicam');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (43, 2, 'Penicilină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (44, 8, 'Rabeprazol');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (45, 1, 'Celecoxib');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (46, 4, 'Bilastină');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (47, 9, 'Perindopril');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (48, 6, 'Repaglinidă');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (49, 7, 'Ezetimib');
+INSERT INTO Medicamente (id_medicament, tip_reteta, nume_medicament)VALUES (50, 10, 'Mirtazapin');
+commit;
+select * from RETETE;
+
+select * from MEDICAMENTE where TIP_RETETA = 2;
+-- Adaugă 10 înregistrări în tabela "Retete" pentru tipul de rețetă 1
+-- și medicamentele cu id-urile 5, 15, 25, 35, 45, cu liste de medicamente cu între 1 și 5 elemente și date aleatorii
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES
+(1, 1, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(5, 15, 25, 35, 45));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES
+(2, 1, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(5, 15));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES
+(3, 1, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(5, 15, 25));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES
+(4, 1, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(5, 15, 25, 35));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES
+(5, 1, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(5));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES
+(6, 1, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(5, 15, 25, 35, 45));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES
+(7, 1, TO_DATE('2022-02-18', 'YYYY-MM-DD'), Lista(5, 15, 25));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES
+(8, 1, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(5, 15, 25, 35));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES
+(9, 1, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(5, 15));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES
+(10, 1, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(5, 15, 25, 35));
+
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(21, 3, TO_DATE('2021-06-15', 'YYYY-MM-DD'), Lista(1, 11, 21, 31, 41));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(22, 3, TO_DATE('2022-07-22', 'YYYY-MM-DD'), Lista(1, 11));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(23, 3, TO_DATE('2022-01-10', 'YYYY-MM-DD'), Lista(1, 11, 21));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(24, 3, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(1, 11, 21, 31));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(25, 3, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(1));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(26, 3, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(1, 11, 21, 31, 41));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(27, 3, TO_DATE('2022-02-18', 'YYYY-MM-DD'), Lista(1, 11, 21));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(28, 3, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(1, 11, 21, 31));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(29, 3, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(1, 11));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(30, 3, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(1, 11, 21, 31));
+
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(31, 4, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(6, 16, 26, 36, 46));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(32, 4, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(6, 16));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(33, 4, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(6, 16, 26));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(34, 4, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(6, 16, 26, 36));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(35, 4, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(6));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(36, 4, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(6, 16, 26, 36, 46));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(37, 4, TO_DATE('2022-02-18', 'YYYY-MM-DD'), Lista(6, 16, 26));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(38, 4, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(6, 16, 26, 36));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(39, 4, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(6, 16));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(40, 4, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(6, 16, 26, 36));
+
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(41, 5, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(2, 12, 22, 32, 42));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(42, 5, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(2, 12));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(43, 5, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(2, 12, 22));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(44, 5, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(2, 12, 22, 32));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(45, 5, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(2));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(46, 5, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(2, 12, 22, 32, 42));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(47, 5, TO_DATE('2022-02-18', 'YYYY-MM-DD'), Lista(2, 12, 22));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(48, 5, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(2, 12, 22, 32));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(49, 5, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(2, 12));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(50, 5, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(2, 12, 22, 32));
+
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(51, 6, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(8, 18, 28, 38, 48));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(52, 6, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(8, 18));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(53, 6, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(8, 18, 28));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(54, 6, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(8, 18, 28, 38));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(55, 6, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(8));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(56, 6, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(8, 18, 28, 38, 48));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(57, 6, TO_DATE('2022-02-18', 'YYYY-MM-DD'), Lista(8, 18, 28));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(58, 6, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(8, 18, 28, 38));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(59, 6, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(8, 18));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(60, 6, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(8, 18, 28, 38));
+
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(61, 7, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(9, 19, 29, 39, 49));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(62, 7, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(9, 19));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(63, 7, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(9, 19, 29));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(64, 7, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(9, 19, 29, 39));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(65, 7, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(9));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(66, 7, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(9, 19, 29, 39, 49));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(67, 7, TO_DATE('2022-02-18', 'YYYY-MM-DD'), Lista(9, 19, 29));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(68, 7, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(9, 19, 29, 39));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(69, 7, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(9, 19));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(70, 7, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(9, 19, 29, 39));
+
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(71, 8, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(4, 14, 24, 34, 44));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(72, 8, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(4, 14));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(73, 8, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(4, 14, 24));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(74, 8, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(4, 14, 24, 34));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(75, 8, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(4));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(76, 8, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(4, 14, 24, 34, 44));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(77, 8, TO_DATE('2022-02-18', 'YYYY-MM-DD'), Lista(4, 14, 24));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(78, 8, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(4, 14, 24, 34));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(79, 8, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(4, 14));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(80, 8, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(4, 14, 24, 34));
+
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(81, 9, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(7, 17, 27, 37, 47));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(82, 9, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(7, 17));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(83, 9, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(7, 17, 27));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(84, 9, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(7, 17, 27, 37));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(85, 9, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(7));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(86, 9, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(7, 17, 27, 37, 47));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(87, 9, TO_DATE('2022-02-18', 'YYYY-MM-DD'), Lista(7, 17, 27));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(88, 9, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(7, 17, 27, 37));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(89, 9, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(7, 17));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(90, 9, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(7, 17, 27, 37));
+
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(91, 10, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(10, 20, 30, 40, 50));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(92, 10, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(10, 20));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(93, 10, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(10, 20, 30));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(94, 10, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(10, 20, 30, 40));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(95, 10, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(10));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(96, 10, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(10, 20, 30, 40, 50));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(97, 10, TO_DATE('2022-02-18', 'YYYY-MM-DD'), Lista(10, 20, 30));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(98, 10, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(10, 20, 30, 40));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(99, 10, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(10, 20));
+INSERT INTO Retete (id_reteta, tip_reteta, data_eliberarii, lista_medicamente)
+VALUES(100, 10, (TO_DATE('2021-01-01', 'YYYY-MM-DD') + DBMS_RANDOM.VALUE * (TO_DATE('2023-12-02', 'YYYY-MM-DD') - TO_DATE('2021-01-01', 'YYYY-MM-DD'))), Lista(10, 20, 30, 40));
+
+commit;
+select * from RETETE;
+
+SELECT table_name
+FROM user_tables
+WHERE num_rows = 0;
+
+
+select * from PACIENTI;
+alter table pacienti
+add Data_Nastere date not null;
+
+select * from DOMICILIU; -- 1-50
+select * from JOB; --1-20
+
+-- Adaugă 10 înregistrări în tabela "Pacienti" cu id_domiciliu și id_job aleatoare
+-- și nume și prenume care coincid dacă id_domiciliu coincide, date_nastere aleatoare
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(1, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Popescu', 'Ion', TO_DATE('1990-01-15', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(2, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Ionescu', 'Ana', TO_DATE('1985-05-20', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(3, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Vasilescu', 'Maria', TO_DATE('1992-08-10', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(4, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Dumitrescu', 'George', TO_DATE('1988-03-03', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(5, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Radulescu', 'Elena', TO_DATE('1995-11-25', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(6, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Constantinescu', 'Mihai', TO_DATE('1987-06-18', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(7, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Gheorghe', 'Ana', TO_DATE('1993-02-12', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(8, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Stoica', 'Alexandru', TO_DATE('1984-07-30', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(9, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Munteanu', 'Andreea', TO_DATE('1991-09-08', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(10, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Cristea', 'Cristian', TO_DATE('1989-12-05', 'YYYY-MM-DD'));
+
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(11, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Georgescu', 'Andrei', TO_DATE('1994-04-22', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(12, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Dinu', 'Elena', TO_DATE('1986-10-15', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(13, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Ilie', 'Ioana', TO_DATE('1997-07-07', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(14, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Voicu', 'Adrian', TO_DATE('1983-12-30', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(15, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Matei', 'Gabriela', TO_DATE('1990-02-18', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(16, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Antonescu', 'Raluca', TO_DATE('1988-05-12', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(17, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Iancu', 'Vlad', TO_DATE('1995-09-25', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(18, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Rosu', 'Laura', TO_DATE('1987-03-07', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(19, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Florescu', 'Catalin', TO_DATE('1992-11-10', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(20, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Mazilu', 'Simona', TO_DATE('1989-06-02', 'YYYY-MM-DD'));
+
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(21, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Radu', 'Ana-Maria', TO_DATE('1993-08-14', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(22, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Stefanescu', 'Razvan', TO_DATE('1988-01-27', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(23, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Pavel', 'Elena', TO_DATE('1991-05-05', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(24, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Costin', 'Andreea', TO_DATE('1985-12-18', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(25, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Dragomir', 'Cristian', TO_DATE('1996-10-03', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(26, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Toma', 'Gabriela', TO_DATE('1987-03-21', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(27, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Gavrila', 'Daniel', TO_DATE('1994-06-28', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(28, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Sava', 'Iulia', TO_DATE('1989-09-10', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(29, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Iovan', 'Mirela', TO_DATE('1992-02-13', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(30, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Vlad', 'Silviu', TO_DATE('1986-11-07', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(31, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Neacsu', 'Roxana', TO_DATE('1992-04-05', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(32, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Mihai', 'Victor', TO_DATE('1987-09-18', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(33, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Ivan', 'Diana', TO_DATE('1995-02-10', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(34, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Florea', 'Adrian', TO_DATE('1990-07-23', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(35, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Voinea', 'Andra', TO_DATE('1984-12-06', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(36, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Albu', 'Catalina', TO_DATE('1993-10-21', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(37, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Coman', 'Ionut', TO_DATE('1988-05-14', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(38, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Vasile', 'Raluca', TO_DATE('1991-08-27', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(39, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Dobre', 'Bogdan', TO_DATE('1986-01-30', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(40, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Nita', 'Larisa', TO_DATE('1994-03-03', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(41, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Popa', 'Iuliana', TO_DATE('1989-06-12', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(42, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Marin', 'Eugen', TO_DATE('1994-11-25', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(43, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Stanciu', 'Mihaela', TO_DATE('1992-02-18', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(44, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Apostol', 'Victor', TO_DATE('1987-09-30', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(45, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Dragan', 'Camelia', TO_DATE('1996-04-03', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(46, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Oprea', 'Sebastian', TO_DATE('1988-08-16', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(47, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Pascu', 'Roxana', TO_DATE('1993-01-19', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(48, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Serban', 'George', TO_DATE('1985-12-22', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(49, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Balan', 'Daniela', TO_DATE('1990-03-07', 'YYYY-MM-DD'));
+INSERT INTO Pacienti (id_pacient, id_domiciliu, id_job, nume, prenume, data_nastere)
+VALUES(50, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 20)), 'Dima', 'Valentin', TO_DATE('1986-07-15', 'YYYY-MM-DD'));
+
+declare
+    begin
+    for i in 1..100 loop
+        INSERT INTO ISTORIC_PACIENTI (id_istoric, id_pacient, id_medic, id_reteta)
+        VALUES(seq_istoric.nextval, CEIL(DBMS_RANDOM.VALUE(1, 50)), CEIL(DBMS_RANDOM.VALUE(1, 100)),CEIL(DBMS_RANDOM.VALUE(1, 100)));
+
+        end loop;
+end;
+
+commit;
